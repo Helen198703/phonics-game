@@ -187,6 +187,7 @@
       <div class="big">🦁🎧✨</div>
       <h1>48个音标练习小游戏</h1>
       <p>点一点，听一听，轻松学会国际音标！</p>
+      <p style="font-size:.75rem;color:#b0a3d8;margin-bottom:8px">音标发音来自 Wikimedia Commons 国际标准 IPA 录音</p>
       <div class="menu-btns">
         <button class="big-btn learn" onclick="showScreen('scrLearn')">📖 学习模式</button>
         <button class="big-btn quiz" onclick="showScreen('scrQuizMenu')">🎮 闯关模式</button>
@@ -296,8 +297,17 @@ const PHONEMES = [
   {ipa:'w',  word:'water', emoji:'💧', type:'cons'},
   {ipa:'j',  word:'yo-yo', emoji:'🪀', type:'cons'},
 ];
-/* 每个音标对应的读音文件（与数组顺序一一对应） */
-PHONEMES.forEach((p, i) => { p.snd = 'audio/ph-' + i + '.m4a'; });
+/* 每个音标对应的读音文件（与数组顺序一一对应）
+   音频来自 Wikimedia Commons 国际标准 IPA 真人录音；
+   双元音（如 eɪ）和组合辅音（如 tʃ）由两个基础音连播构成 */
+const PH_SND = [
+  ['v_i'],['v_ii'],['v_eh'],['v_ae'],['v_er'],['v_sch'],['v_uh'],['v_u'],['v_aw'],['v_o'],['v_ah'],['v_aa'],
+  ['v_eh','v_ii'],['v_a','v_ii'],['v_aw','v_ii'],['v_sch','v_uh'],['v_a','v_uh'],['v_ii','v_sch'],['v_eh','v_sch'],['v_uh','v_sch'],
+  ['c_p'],['c_b'],['c_t'],['c_d'],['c_k'],['c_g'],['c_f'],['c_v'],['c_th'],['c_dh'],['c_s'],['c_z'],['c_sh'],['c_zh'],
+  ['c_t','c_sh'],['c_d','c_zh'],['c_t','c_r'],['c_d','c_r'],['c_t','c_s'],['c_d','c_z'],
+  ['c_m'],['c_n'],['c_ng'],['c_h'],['c_l'],['c_r'],['c_w'],['c_j']
+];
+PHONEMES.forEach((p, i) => { p.snd = PH_SND[i].map(k => 'audio/ipa/' + k + '.m4a'); });
 
 /* ================= 全局错误提示（便于排查问题） ================= */
 window.onerror = function(msg, src, line) {
@@ -357,8 +367,24 @@ function playAudio(url, btn, fallbackText) {
 }
 /* 播放示例单词的发音 */
 function speakWord(p, btn) { playAudio('audio/' + encodeURIComponent(p.word) + '.m4a', btn, p.word); }
-/* 播放音标本身的读音 */
-function speakSound(p, btn) { playAudio(p.snd, btn, p.word); }
+/* 播放音标本身的读音（双元音/组合辅音为两段连播） */
+function speakSound(p, btn) {
+  try { if (synthOK) speechSynthesis.cancel(); } catch(e) {}
+  if (curAudio) { try { curAudio.pause(); } catch(e){} curAudio = null; }
+  if (btn) btn.classList.add('playing');
+  const done = () => { if (btn) btn.classList.remove('playing'); };
+  const urls = p.snd.slice();
+  const playNext = () => {
+    if (!urls.length) { done(); curAudio = null; return; }
+    const a = new Audio(urls.shift());
+    curAudio = a;
+    a.onended = playNext;
+    a.onerror = () => { curAudio = null; done(); };
+    const pr = a.play();
+    if (pr && pr.catch) pr.catch(() => { curAudio = null; done(); });
+  };
+  playNext();
+}
 
 /* ================= 音效 ================= */
 let AC = null;
