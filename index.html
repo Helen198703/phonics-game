@@ -188,7 +188,7 @@
       <button class="tab on" id="tabVowel" onclick="switchTab('vowel')">🍎 元音 (20)</button>
       <button class="tab" id="tabCons" onclick="switchTab('cons')">🍇 辅音 (28)</button>
     </div>
-    <div class="hint">👆 点击卡片，听发音、看单词！</div>
+    <div class="hint">👆 点击卡片，听音标的读音！</div>
     <div class="cards" id="cardGrid"></div>
   </section>
 
@@ -284,6 +284,8 @@ const PHONEMES = [
   {ipa:'w',  word:'water', emoji:'💧', type:'cons'},
   {ipa:'j',  word:'yo-yo', emoji:'🪀', type:'cons'},
 ];
+/* 每个音标对应的读音文件（与数组顺序一一对应） */
+PHONEMES.forEach((p, i) => { p.snd = 'audio/ph-' + i + '.m4a'; });
 
 /* ================= 语音 ================= */
 let voice = null;
@@ -315,19 +317,22 @@ function ttsSpeak(text, btn) {
 
 /* 优先播放内置音频文件（任何浏览器都有声音），失败时回退浏览器语音合成 */
 let curAudio = null;
-function speak(p, btn) {
-  const word = typeof p === 'string' ? p : p.word;
+function playAudio(url, btn, fallbackText) {
   try { speechSynthesis.cancel(); } catch(e) {}
   if (curAudio) { try { curAudio.pause(); } catch(e){} curAudio = null; }
   if (btn) btn.classList.add('playing');
   const done = () => { if (btn) btn.classList.remove('playing'); };
-  const a = new Audio('audio/' + encodeURIComponent(word) + '.m4a');
+  const a = new Audio(url);
   curAudio = a;
   a.onended = () => { done(); curAudio = null; };
-  a.onerror = () => { curAudio = null; ttsSpeak(word, btn); };
+  a.onerror = () => { curAudio = null; if (fallbackText) ttsSpeak(fallbackText, btn); else done(); };
   const pr = a.play();
-  if (pr && pr.catch) pr.catch(() => { curAudio = null; ttsSpeak(word, btn); });
+  if (pr && pr.catch) pr.catch(() => { curAudio = null; if (fallbackText) ttsSpeak(fallbackText, btn); else done(); });
 }
+/* 播放示例单词的发音 */
+function speakWord(p, btn) { playAudio('audio/' + encodeURIComponent(p.word) + '.m4a', btn, p.word); }
+/* 播放音标本身的读音 */
+function speakSound(p, btn) { playAudio(p.snd, btn, p.word); }
 
 /* ================= 音效 ================= */
 let AC = null;
@@ -378,7 +383,7 @@ function renderCards() {
         <div class="face front"><div class="ipa">/${p.ipa}/</div><div class="play">🔊</div></div>
         <div class="face back"><div class="emoji">${p.emoji}</div><div class="word">${p.word}</div><div class="ipa2">/${p.ipa}/</div></div>
       </div>`;
-    c.onclick = () => { c.classList.toggle('flip'); speak(p.word); };
+    c.onclick = () => { c.classList.toggle('flip'); speakSound(p); };
     grid.appendChild(c);
   });
 }
@@ -420,7 +425,7 @@ function nextQuestion() {
       <button class="speaker-btn" id="spk">🔊</button>
       <div class="q-sub">点喇叭可以重复听哦</div>`;
     const spk = document.getElementById('spk');
-    spk.onclick = () => speak(current.word, spk);
+    spk.onclick = () => speakSound(current, spk);
     opts.forEach(p => {
       const b = document.createElement('button');
       b.className = 'opt';
@@ -428,7 +433,7 @@ function nextQuestion() {
       b.onclick = () => answer(b, p);
       optGrid.appendChild(b);
     });
-    setTimeout(() => speak(current.word, spk), 400);
+    setTimeout(() => speakSound(current, spk), 400);
   } else {
     qBox.innerHTML = `
       <div class="q-label">👀 这个音标是哪个单词里的？</div>
@@ -441,7 +446,7 @@ function nextQuestion() {
       b.onclick = () => answer(b, p);
       optGrid.appendChild(b);
     });
-    setTimeout(() => speak(current.word), 400);
+    setTimeout(() => speakWord(current), 400);
   }
 }
 
@@ -471,7 +476,7 @@ function answer(btn, picked) {
     fb.className = 'feedback bad';
     sndBad();
   }
-  speak(current.word);
+  if (quizMode === 'listen') speakSound(current); else speakWord(current);
   qIndex++;
   setTimeout(nextQuestion, good ? 1200 : 2200);
 }
