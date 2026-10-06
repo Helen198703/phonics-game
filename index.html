@@ -142,6 +142,12 @@
   .result-box p { color: #8a7bb8; margin-bottom: 22px; }
   .row-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
+  /* ---------- 老浏览器降级：不支持3D翻转而用淡入淡出 ---------- */
+  body.no3d .card-inner { transform: none !important; transition: none; }
+  body.no3d .face.back { transform: none; display: none; }
+  body.no3d .card.flip .face.front { display: none; }
+  body.no3d .card.flip .face.back { display: flex; }
+
   /* ---------- 彩带 ---------- */
   #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
 
@@ -289,13 +295,38 @@ function pickVoice() {
 }
 speechSynthesis.onvoiceschanged = pickVoice; pickVoice();
 
-function speak(text, btn) {
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US'; u.rate = 0.72; u.pitch = 1.1;
-  if (voice) u.voice = voice;
-  if (btn) { btn.classList.add('playing'); u.onend = () => btn.classList.remove('playing'); }
-  speechSynthesis.speak(u);
+/* 老浏览器（不支持 3D 翻转）降级处理 */
+try {
+  if (!(window.CSS && CSS.supports && CSS.supports('transform-style','preserve-3d'))) {
+    document.body.classList.add('no3d');
+  }
+} catch(e) { document.body.classList.add('no3d'); }
+
+function ttsSpeak(text, btn) {
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = 0.72; u.pitch = 1.1;
+    if (voice) u.voice = voice;
+    if (btn) { u.onend = u.onerror = () => btn.classList.remove('playing'); }
+    speechSynthesis.speak(u);
+  } catch(e) { if (btn) btn.classList.remove('playing'); }
+}
+
+/* 优先播放内置音频文件（任何浏览器都有声音），失败时回退浏览器语音合成 */
+let curAudio = null;
+function speak(p, btn) {
+  const word = typeof p === 'string' ? p : p.word;
+  try { speechSynthesis.cancel(); } catch(e) {}
+  if (curAudio) { try { curAudio.pause(); } catch(e){} curAudio = null; }
+  if (btn) btn.classList.add('playing');
+  const done = () => { if (btn) btn.classList.remove('playing'); };
+  const a = new Audio('audio/' + encodeURIComponent(word) + '.m4a');
+  curAudio = a;
+  a.onended = () => { done(); curAudio = null; };
+  a.onerror = () => { curAudio = null; ttsSpeak(word, btn); };
+  const pr = a.play();
+  if (pr && pr.catch) pr.catch(() => { curAudio = null; ttsSpeak(word, btn); });
 }
 
 /* ================= 音效 ================= */
