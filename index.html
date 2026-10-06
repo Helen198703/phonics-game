@@ -42,7 +42,9 @@
   .hero .big { font-size: 3rem; }
   .hero h1 { font-size: 2.2rem; color: #5b4b8a; margin: 10px 0 4px; text-shadow: 2px 2px 0 #fff; }
   .hero p { color: #8a7bb8; font-size: 1.05rem; margin-bottom: 30px; }
-  .menu-btns { display: flex; flex-direction: column; gap: 18px; width: min(320px, 86vw); margin: 0 auto; }
+  .menu-btns { display: flex; flex-direction: column; width: 86vw; max-width: 320px; margin: 0 auto; }
+  .menu-btns > .big-btn { margin-top: 18px; }
+  .menu-btns > .big-btn:first-child { margin-top: 0; }
   .big-btn {
     border: none; cursor: pointer; font-family: inherit;
     font-size: 1.35rem; font-weight: bold; color: #fff;
@@ -55,9 +57,9 @@
   .big-btn.quiz  { background: linear-gradient(180deg, #6ec6ff, #3d9be9); }
 
   /* ---------- 学习模式 ---------- */
-  .tabs { display: flex; gap: 10px; margin-bottom: 14px; }
+  .tabs { display: flex; margin-bottom: 14px; }
   .tab {
-    border: none; font-family: inherit; font-size: 1.05rem; font-weight: bold;
+    border: none; font-family: inherit; font-size: 1.05rem; font-weight: bold; margin: 0 5px;
     padding: 9px 22px; border-radius: 999px; cursor: pointer;
     background: #ffffffaa; color: #8a7bb8; box-shadow: 0 3px 0 #e3dcf5;
     transition: all .15s;
@@ -68,6 +70,12 @@
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; width: 100%; }
   .card {
     aspect-ratio: 1/1.05; perspective: 600px; cursor: pointer;
+    position: relative;
+  }
+  /* 老浏览器（如部分微信内核）不支持 aspect-ratio 时的兜底 */
+  @supports not (aspect-ratio: 1/1) {
+    .card { height: 0; padding-top: 105%; }
+    .card .card-inner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   }
   .card-inner {
     width: 100%; height: 100%; position: relative;
@@ -75,10 +83,12 @@
   }
   .card.flip .card-inner { transform: rotateY(180deg); }
   .face {
-    position: absolute; inset: 0; border-radius: 18px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    backface-visibility: hidden; box-shadow: 0 4px 0 rgba(90,70,140,.18);
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    box-shadow: 0 4px 0 rgba(90,70,140,.18);
   }
+  .face > * { margin: 3px 0; }
   .face.front { background: #fff; }
   .face.front .ipa { font-size: 1.7rem; font-weight: bold; color: #5b4b8a; }
   .face.front .play { font-size: 1.1rem; opacity: .55; }
@@ -88,7 +98,8 @@
   .face.back .ipa2 { font-size: 1rem; opacity: .9; }
 
   /* ---------- 闯关模式 ---------- */
-  .quiz-top { width: 100%; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .quiz-top { width: 100%; display: flex; align-items: center; margin-bottom: 10px; }
+  .quiz-top .progress { margin-right: 12px; }
   .progress { flex: 1; height: 16px; background: #ffffff99; border-radius: 999px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,.08); }
   .progress > div { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ffd54f, #ffb300); transition: width .3s; }
   .score-chip { background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: bold; color: #e6a100; box-shadow: 0 3px 0 #f0e2b8; white-space: nowrap; }
@@ -117,9 +128,9 @@
     font-size: 1.6rem; font-weight: bold; color: #5b4b8a;
     box-shadow: 0 5px 0 rgba(90,70,140,.18);
     transition: transform .12s, background .2s;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    display: flex; flex-direction: column; align-items: center;
   }
-  .opt .o-emoji { font-size: 2rem; }
+  .opt .o-emoji { font-size: 2rem; margin-bottom: 4px; }
   .opt .o-word { font-size: 1.05rem; color: #8a7bb8; }
   .opt:active { transform: scale(.95); }
   .opt.correct { background: #c8f7c5; animation: bounce .5s; }
@@ -135,12 +146,13 @@
   /* ---------- 结算 ---------- */
   .result-box {
     background: #ffffffdd; border-radius: 30px; padding: 34px 30px; text-align: center;
-    box-shadow: 0 8px 0 rgba(90,70,140,.14); width: min(420px, 92vw); margin-top: 5vh;
+    box-shadow: 0 8px 0 rgba(90,70,140,.14); width: 92vw; max-width: 420px; margin-top: 5vh;
   }
   .result-box .stars { font-size: 3rem; letter-spacing: 6px; }
   .result-box h2 { color: #5b4b8a; margin: 12px 0 4px; }
   .result-box p { color: #8a7bb8; margin-bottom: 22px; }
-  .row-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .row-btns { display: flex; justify-content: center; flex-wrap: wrap; }
+  .row-btns > * { margin: 4px 6px; }
 
   /* ---------- 老浏览器降级：不支持3D翻转而用淡入淡出 ---------- */
   body.no3d .card-inner { transform: none !important; transition: none; }
@@ -149,7 +161,7 @@
   body.no3d .card.flip .face.back { display: flex; }
 
   /* ---------- 彩带 ---------- */
-  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
+  #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; }
 
   @media (max-width: 520px) {
     .hero h1 { font-size: 1.7rem; }
@@ -287,15 +299,29 @@ const PHONEMES = [
 /* 每个音标对应的读音文件（与数组顺序一一对应） */
 PHONEMES.forEach((p, i) => { p.snd = 'audio/ph-' + i + '.m4a'; });
 
+/* ================= 全局错误提示（便于排查问题） ================= */
+window.onerror = function(msg, src, line) {
+  try {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#e06060;color:#fff;font-size:12px;padding:6px 10px;z-index:9999;text-align:center';
+    d.textContent = '⚠️ 页面出错了: ' + msg + '（第' + line + '行）请截图反馈';
+    document.body.appendChild(d);
+  } catch(e) {}
+};
+
 /* ================= 语音 ================= */
 let voice = null;
+const synthOK = !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === 'function';
 function pickVoice() {
-  const vs = speechSynthesis.getVoices();
-  voice = vs.find(v => /en[-_]US/i.test(v.lang) && /female|samantha|zira|google/i.test(v.name))
-       || vs.find(v => /en[-_]US/i.test(v.lang))
-       || vs.find(v => /^en/i.test(v.lang)) || null;
+  if (!synthOK) return;
+  try {
+    const vs = speechSynthesis.getVoices();
+    voice = vs.find(v => /en[-_]US/i.test(v.lang) && /female|samantha|zira|google/i.test(v.name))
+         || vs.find(v => /en[-_]US/i.test(v.lang))
+         || vs.find(v => /^en/i.test(v.lang)) || null;
+  } catch(e) {}
 }
-speechSynthesis.onvoiceschanged = pickVoice; pickVoice();
+if (synthOK) { speechSynthesis.onvoiceschanged = pickVoice; pickVoice(); }
 
 /* 老浏览器（不支持 3D 翻转）降级处理 */
 try {
@@ -359,7 +385,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btnHome.style.display = id === 'scrHome' ? 'none' : '';
-  speechSynthesis.cancel();
+  try { if (synthOK) speechSynthesis.cancel(); } catch(e) {}
   window.scrollTo(0,0);
 }
 btnHome.onclick = () => showScreen('scrHome');
