@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎵 音标小乐园 - 48个音标练习</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Comic Sans MS", "Chalkboard SE", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #fff1eb 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    overflow-x: hidden;
+    user-select: none;
+  }
+
+  /* ---------- 顶部栏 ---------- */
+  header {
+    width: 100%; max-width: 900px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+  }
+  .logo { font-size: 1.4rem; font-weight: bold; color: #5b4b8a; text-shadow: 1px 1px 0 #fff; }
+  .btn-home {
+    border: none; background: #fff; color: #5b4b8a; font-size: 1rem; font-weight: bold;
+    padding: 8px 16px; border-radius: 999px; cursor: pointer;
+    box-shadow: 0 3px 0 #d9cfee; transition: transform .1s;
+    font-family: inherit;
+  }
+  .btn-home:active { transform: scale(.93); }
+
+  main { width: 100%; max-width: 900px; flex: 1; padding: 6px 16px 40px; display: flex; flex-direction: column; }
+
+  .screen { display: none; flex-direction: column; align-items: center; animation: pop .35s ease; }
+  .screen.active { display: flex; }
+  @keyframes pop { from { opacity: 0; transform: scale(.92) translateY(10px);} to { opacity: 1; transform: none; } }
+
+  /* ---------- 首页 ---------- */
+  .hero { text-align: center; margin-top: 4vh; }
+  .hero .big { font-size: 3rem; }
+  .hero h1 { font-size: 2.2rem; color: #5b4b8a; margin: 10px 0 4px; text-shadow: 2px 2px 0 #fff; }
+  .hero p { color: #8a7bb8; font-size: 1.05rem; margin-bottom: 30px; }
+  .menu-btns { display: flex; flex-direction: column; gap: 18px; width: min(320px, 86vw); margin: 0 auto; }
+  .big-btn {
+    border: none; cursor: pointer; font-family: inherit;
+    font-size: 1.35rem; font-weight: bold; color: #fff;
+    padding: 18px; border-radius: 24px;
+    box-shadow: 0 6px 0 rgba(0,0,0,.15);
+    transition: transform .12s, box-shadow .12s;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+  .big-btn.learn { background: linear-gradient(180deg, #ffb347, #ff8c42); }
+  .big-btn.quiz  { background: linear-gradient(180deg, #6ec6ff, #3d9be9); }
+
+  /* ---------- 学习模式 ---------- */
+  .tabs { display: flex; gap: 10px; margin-bottom: 14px; }
+  .tab {
+    border: none; font-family: inherit; font-size: 1.05rem; font-weight: bold;
+    padding: 9px 22px; border-radius: 999px; cursor: pointer;
+    background: #ffffffaa; color: #8a7bb8; box-shadow: 0 3px 0 #e3dcf5;
+    transition: all .15s;
+  }
+  .tab.on { background: #8a6fd6; color: #fff; box-shadow: 0 3px 0 #6b53b3; }
+  .hint { color: #8a7bb8; margin-bottom: 12px; font-size: .95rem; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; width: 100%; }
+  .card {
+    aspect-ratio: 1/1.05; perspective: 600px; cursor: pointer;
+  }
+  .card-inner {
+    width: 100%; height: 100%; position: relative;
+    transition: transform .45s; transform-style: preserve-3d;
+  }
+  .card.flip .card-inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    backface-visibility: hidden; box-shadow: 0 4px 0 rgba(90,70,140,.18);
+  }
+  .face.front { background: #fff; }
+  .face.front .ipa { font-size: 1.7rem; font-weight: bold; color: #5b4b8a; }
+  .face.front .play { font-size: 1.1rem; opacity: .55; }
+  .face.back { background: linear-gradient(160deg, #8a6fd6, #b39df0); color: #fff; transform: rotateY(180deg); }
+  .face.back .emoji { font-size: 2.2rem; }
+  .face.back .word { font-size: 1.15rem; font-weight: bold; }
+  .face.back .ipa2 { font-size: 1rem; opacity: .9; }
+
+  /* ---------- 闯关模式 ---------- */
+  .quiz-top { width: 100%; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .progress { flex: 1; height: 16px; background: #ffffff99; border-radius: 999px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,.08); }
+  .progress > div { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ffd54f, #ffb300); transition: width .3s; }
+  .score-chip { background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: bold; color: #e6a100; box-shadow: 0 3px 0 #f0e2b8; white-space: nowrap; }
+
+  .question-box {
+    width: 100%; background: #ffffffcc; border-radius: 26px; padding: 26px 18px;
+    text-align: center; box-shadow: 0 6px 0 rgba(90,70,140,.12); margin-bottom: 18px;
+  }
+  .question-box .q-label { color: #8a7bb8; font-size: 1rem; margin-bottom: 12px; }
+  .speaker-btn {
+    border: none; cursor: pointer; font-family: inherit;
+    width: 96px; height: 96px; border-radius: 50%; font-size: 2.6rem;
+    background: linear-gradient(180deg, #6ec6ff, #3d9be9); color: #fff;
+    box-shadow: 0 6px 0 #2c7cc0; transition: transform .1s;
+  }
+  .speaker-btn:active { transform: scale(.92); }
+  .speaker-btn.playing { animation: pulse .8s infinite; }
+  @keyframes pulse { 50% { transform: scale(1.08); } }
+  .q-ipa { font-size: 3.4rem; font-weight: bold; color: #5b4b8a; margin: 6px 0; }
+  .q-sub { color: #b0a3d8; font-size: .95rem; margin-top: 8px; }
+
+  .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; max-width: 560px; }
+  .opt {
+    border: none; cursor: pointer; font-family: inherit;
+    background: #fff; border-radius: 20px; padding: 20px 10px;
+    font-size: 1.6rem; font-weight: bold; color: #5b4b8a;
+    box-shadow: 0 5px 0 rgba(90,70,140,.18);
+    transition: transform .12s, background .2s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .opt .o-emoji { font-size: 2rem; }
+  .opt .o-word { font-size: 1.05rem; color: #8a7bb8; }
+  .opt:active { transform: scale(.95); }
+  .opt.correct { background: #c8f7c5; animation: bounce .5s; }
+  .opt.wrong { background: #ffd3d3; animation: shake .4s; }
+  .opt:disabled { cursor: default; }
+  @keyframes bounce { 30% { transform: scale(1.12);} 60% { transform: scale(.96);} }
+  @keyframes shake { 25% { transform: translateX(-7px);} 75% { transform: translateX(7px);} }
+
+  .feedback { min-height: 44px; font-size: 1.4rem; font-weight: bold; margin-top: 14px; }
+  .feedback.good { color: #3aa655; }
+  .feedback.bad { color: #e06060; }
+
+  /* ---------- 结算 ---------- */
+  .result-box {
+    background: #ffffffdd; border-radius: 30px; padding: 34px 30px; text-align: center;
+    box-shadow: 0 8px 0 rgba(90,70,140,.14); width: min(420px, 92vw); margin-top: 5vh;
+  }
+  .result-box .stars { font-size: 3rem; letter-spacing: 6px; }
+  .result-box h2 { color: #5b4b8a; margin: 12px 0 4px; }
+  .result-box p { color: #8a7bb8; margin-bottom: 22px; }
+  .row-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ---------- 彩带 ---------- */
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 99; }
+
+  @media (max-width: 520px) {
+    .hero h1 { font-size: 1.7rem; }
+    .cards { grid-template-columns: repeat(3, 1fr); }
+    .options { grid-template-columns: repeat(2, 1fr); }
+    .q-ipa { font-size: 2.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<header>
+  <div class="logo">🎵 音标小乐园</div>
+  <button class="btn-home" id="btnHome" style="display:none">🏠 首页</button>
+</header>
+
+<main>
+  <!-- 首页 -->
+  <section class="screen active" id="scrHome">
+    <div class="hero">
+      <div class="big">🦁🎧✨</div>
+      <h1>48个音标练习小游戏</h1>
+      <p>点一点，听一听，轻松学会国际音标！</p>
+      <div class="menu-btns">
+        <button class="big-btn learn" onclick="showScreen('scrLearn')">📖 学习模式</button>
+        <button class="big-btn quiz" onclick="showScreen('scrQuizMenu')">🎮 闯关模式</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 学习模式 -->
+  <section class="screen" id="scrLearn">
+    <div class="tabs">
+      <button class="tab on" id="tabVowel" onclick="switchTab('vowel')">🍎 元音 (20)</button>
+      <button class="tab" id="tabCons" onclick="switchTab('cons')">🍇 辅音 (28)</button>
+    </div>
+    <div class="hint">👆 点击卡片，听发音、看单词！</div>
+    <div class="cards" id="cardGrid"></div>
+  </section>
+
+  <!-- 闯关菜单 -->
+  <section class="screen" id="scrQuizMenu">
+    <div class="hero" style="margin-top:2vh">
+      <div class="big">🎮</div>
+      <h1>选择挑战</h1>
+      <p>每局 10 题，答对得 ⭐，试试看吧！</p>
+      <div class="menu-btns">
+        <button class="big-btn quiz" onclick="startQuiz('listen')">👂 听音选音标</button>
+        <button class="big-btn learn" onclick="startQuiz('look')">👀 看音标选单词</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 闯关答题 -->
+  <section class="screen" id="scrQuiz">
+    <div class="quiz-top">
+      <div class="progress"><div id="progBar"></div></div>
+      <div class="score-chip">⭐ <span id="scoreNow">0</span></div>
+    </div>
+    <div class="question-box" id="qBox"></div>
+    <div class="options" id="optGrid"></div>
+    <div class="feedback" id="feedback"></div>
+  </section>
+
+  <!-- 结算 -->
+  <section class="screen" id="scrResult">
+    <div class="result-box">
+      <div class="stars" id="starLine"></div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultDesc"></p>
+      <div class="row-btns">
+        <button class="big-btn quiz" style="font-size:1.1rem;padding:14px 26px" onclick="restartQuiz()">🔁 再来一局</button>
+        <button class="big-btn learn" style="font-size:1.1rem;padding:14px 26px" onclick="showScreen('scrHome')">🏠 回首页</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ================= 48个音标数据 ================= */
+const PHONEMES = [
+  // ---- 元音 20 ----
+  {ipa:'iː', word:'bee',   emoji:'🐝', type:'vowel'},
+  {ipa:'ɪ',  word:'pig',   emoji:'🐷', type:'vowel'},
+  {ipa:'e',  word:'egg',   emoji:'🥚', type:'vowel'},
+  {ipa:'æ',  word:'cat',   emoji:'🐱', type:'vowel'},
+  {ipa:'ɜː', word:'bird',  emoji:'🐦', type:'vowel'},
+  {ipa:'ə',  word:'banana',emoji:'🍌', type:'vowel'},
+  {ipa:'ʊ',  word:'book',  emoji:'📖', type:'vowel'},
+  {ipa:'uː', word:'moon',  emoji:'🌙', type:'vowel'},
+  {ipa:'ɔː', word:'horse', emoji:'🐴', type:'vowel'},
+  {ipa:'ɒ',  word:'dog',   emoji:'🐶', type:'vowel'},
+  {ipa:'ʌ',  word:'duck',  emoji:'🦆', type:'vowel'},
+  {ipa:'ɑː', word:'car',   emoji:'🚗', type:'vowel'},
+  {ipa:'eɪ', word:'cake',  emoji:'🎂', type:'vowel'},
+  {ipa:'aɪ', word:'kite',  emoji:'🪁', type:'vowel'},
+  {ipa:'ɔɪ', word:'boy',   emoji:'👦', type:'vowel'},
+  {ipa:'əʊ', word:'boat',  emoji:'⛵', type:'vowel'},
+  {ipa:'aʊ', word:'cow',   emoji:'🐄', type:'vowel'},
+  {ipa:'ɪə', word:'ear',   emoji:'👂', type:'vowel'},
+  {ipa:'eə', word:'bear',  emoji:'🐻', type:'vowel'},
+  {ipa:'ʊə', word:'tour',  emoji:'🧳', type:'vowel'},
+  // ---- 辅音 28 ----
+  {ipa:'p',  word:'pen',   emoji:'✏️', type:'cons'},
+  {ipa:'b',  word:'ball',  emoji:'⚽', type:'cons'},
+  {ipa:'t',  word:'tiger', emoji:'🐯', type:'cons'},
+  {ipa:'d',  word:'deer',  emoji:'🦌', type:'cons'},
+  {ipa:'k',  word:'key',   emoji:'🔑', type:'cons'},
+  {ipa:'g',  word:'goat',  emoji:'🐐', type:'cons'},
+  {ipa:'f',  word:'fish',  emoji:'🐟', type:'cons'},
+  {ipa:'v',  word:'violin',emoji:'🎻', type:'cons'},
+  {ipa:'θ',  word:'three', emoji:'3️⃣', type:'cons'},
+  {ipa:'ð',  word:'this',  emoji:'👉', type:'cons'},
+  {ipa:'s',  word:'sun',   emoji:'☀️', type:'cons'},
+  {ipa:'z',  word:'zoo',   emoji:'🦁', type:'cons'},
+  {ipa:'ʃ',  word:'ship',  emoji:'🚢', type:'cons'},
+  {ipa:'ʒ',  word:'television', emoji:'📺', type:'cons'},
+  {ipa:'tʃ', word:'cheese',emoji:'🧀', type:'cons'},
+  {ipa:'dʒ', word:'juice', emoji:'🧃', type:'cons'},
+  {ipa:'tr', word:'tree',  emoji:'🌳', type:'cons'},
+  {ipa:'dr', word:'drum',  emoji:'🥁', type:'cons'},
+  {ipa:'ts', word:'cats',  emoji:'🐈', type:'cons'},
+  {ipa:'dz', word:'beds',  emoji:'🛏️', type:'cons'},
+  {ipa:'m',  word:'monkey',emoji:'🐵', type:'cons'},
+  {ipa:'n',  word:'nose',  emoji:'👃', type:'cons'},
+  {ipa:'ŋ',  word:'sing',  emoji:'🎤', type:'cons'},
+  {ipa:'h',  word:'hat',   emoji:'🎩', type:'cons'},
+  {ipa:'l',  word:'lion',  emoji:'🦁', type:'cons'},
+  {ipa:'r',  word:'rabbit',emoji:'🐰', type:'cons'},
+  {ipa:'w',  word:'water', emoji:'💧', type:'cons'},
+  {ipa:'j',  word:'yo-yo', emoji:'🪀', type:'cons'},
+];
+
+/* ================= 语音 ================= */
+let voice = null;
+function pickVoice() {
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => /en[-_]US/i.test(v.lang) && /female|samantha|zira|google/i.test(v.name))
+       || vs.find(v => /en[-_]US/i.test(v.lang))
+       || vs.find(v => /^en/i.test(v.lang)) || null;
+}
+speechSynthesis.onvoiceschanged = pickVoice; pickVoice();
+
+function speak(text, btn) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.72; u.pitch = 1.1;
+  if (voice) u.voice = voice;
+  if (btn) { btn.classList.add('playing'); u.onend = () => btn.classList.remove('playing'); }
+  speechSynthesis.speak(u);
+}
+
+/* ================= 音效 ================= */
+let AC = null;
+function beep(freqs, dur=0.12, type='sine', vol=0.25) {
+  try {
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i) => {
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(vol, AC.currentTime + i*dur);
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + i*dur + dur);
+      o.connect(g).connect(AC.destination);
+      o.start(AC.currentTime + i*dur); o.stop(AC.currentTime + i*dur + dur);
+    });
+  } catch(e) {}
+}
+const sndGood = () => beep([523,659,784], .11);
+const sndBad  = () => beep([220,160], .16, 'square', .12);
+const sndWin  = () => beep([523,659,784,1047], .15);
+
+/* ================= 界面切换 ================= */
+const btnHome = document.getElementById('btnHome');
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btnHome.style.display = id === 'scrHome' ? 'none' : '';
+  speechSynthesis.cancel();
+  window.scrollTo(0,0);
+}
+btnHome.onclick = () => showScreen('scrHome');
+
+/* ================= 学习模式 ================= */
+let curTab = 'vowel';
+function switchTab(t) {
+  curTab = t;
+  document.getElementById('tabVowel').classList.toggle('on', t==='vowel');
+  document.getElementById('tabCons').classList.toggle('on', t==='cons');
+  renderCards();
+}
+function renderCards() {
+  const grid = document.getElementById('cardGrid');
+  grid.innerHTML = '';
+  PHONEMES.filter(p => p.type === curTab).forEach(p => {
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.innerHTML = `
+      <div class="card-inner">
+        <div class="face front"><div class="ipa">/${p.ipa}/</div><div class="play">🔊</div></div>
+        <div class="face back"><div class="emoji">${p.emoji}</div><div class="word">${p.word}</div><div class="ipa2">/${p.ipa}/</div></div>
+      </div>`;
+    c.onclick = () => { c.classList.toggle('flip'); speak(p.word); };
+    grid.appendChild(c);
+  });
+}
+renderCards();
+
+/* ================= 闯关模式 ================= */
+const TOTAL = 10;
+let quizMode = 'listen', qIndex = 0, score = 0, current = null, locked = false, quizPool = [];
+
+function shuffle(a) { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function startQuiz(mode) {
+  quizMode = mode; qIndex = 0; score = 0;
+  quizPool = shuffle([...PHONEMES]).slice(0, TOTAL);
+  document.getElementById('scoreNow').textContent = '0';
+  document.getElementById('progBar').style.width = '0%';
+  showScreen('scrQuiz');
+  nextQuestion();
+}
+
+function nextQuestion() {
+  if (qIndex >= TOTAL) return endQuiz();
+  locked = false;
+  current = quizPool[qIndex];
+  document.getElementById('progBar').style.width = (qIndex / TOTAL * 100) + '%';
+  document.getElementById('feedback').textContent = '';
+
+  const qBox = document.getElementById('qBox');
+  const optGrid = document.getElementById('optGrid');
+  optGrid.innerHTML = '';
+
+  // 干扰项：3 个同类型的其他音标
+  const distract = shuffle(PHONEMES.filter(p => p !== current && p.type === current.type)).slice(0,3);
+  const opts = shuffle([current, ...distract]);
+
+  if (quizMode === 'listen') {
+    qBox.innerHTML = `
+      <div class="q-label">👂 听一听，选出你听到的音标</div>
+      <button class="speaker-btn" id="spk">🔊</button>
+      <div class="q-sub">点喇叭可以重复听哦</div>`;
+    const spk = document.getElementById('spk');
+    spk.onclick = () => speak(current.word, spk);
+    opts.forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.innerHTML = `/${p.ipa}/`;
+      b.onclick = () => answer(b, p);
+      optGrid.appendChild(b);
+    });
+    setTimeout(() => speak(current.word, spk), 400);
+  } else {
+    qBox.innerHTML = `
+      <div class="q-label">👀 这个音标是哪个单词里的？</div>
+      <div class="q-ipa">/${current.ipa}/</div>
+      <div class="q-sub">点一点正确答案</div>`;
+    opts.forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.innerHTML = `<span class="o-emoji">${p.emoji}</span><span class="o-word">${p.word}</span>`;
+      b.onclick = () => answer(b, p);
+      optGrid.appendChild(b);
+    });
+    setTimeout(() => speak(current.word), 400);
+  }
+}
+
+function answer(btn, picked) {
+  if (locked) return;
+  locked = true;
+  const fb = document.getElementById('feedback');
+  const good = picked === current;
+  document.querySelectorAll('#optGrid .opt').forEach(b => b.disabled = true);
+
+  if (good) {
+    btn.classList.add('correct');
+    score++;
+    document.getElementById('scoreNow').textContent = score;
+    fb.textContent = ['🎉 太棒了！','👏 答对啦！','🌟 真厉害！','😄 好样的！'][Math.floor(Math.random()*4)];
+    fb.className = 'feedback good';
+    sndGood();
+    burst(14);
+  } else {
+    btn.classList.add('wrong');
+    // 标出正确答案
+    document.querySelectorAll('#optGrid .opt').forEach(b => {
+      const t = b.textContent;
+      if (t.includes('/'+current.ipa+'/') || t.includes(current.word)) b.classList.add('correct');
+    });
+    fb.textContent = `💪 别灰心！正确答案是 /${current.ipa}/（${current.word} ${current.emoji}）`;
+    fb.className = 'feedback bad';
+    sndBad();
+  }
+  speak(current.word);
+  qIndex++;
+  setTimeout(nextQuestion, good ? 1200 : 2200);
+}
+
+function endQuiz() {
+  document.getElementById('progBar').style.width = '100%';
+  const stars = score >= 9 ? 3 : score >= 7 ? 2 : score >= 5 ? 1 : 0;
+  document.getElementById('starLine').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+  document.getElementById('resultTitle').textContent =
+    score >= 9 ? '音标小达人！' : score >= 7 ? '非常棒！' : score >= 5 ? '继续加油！' : '再练一练！';
+  document.getElementById('resultDesc').textContent = `本局得分：${score} / ${TOTAL}`;
+  showScreen('scrResult');
+  if (stars >= 2) { sndWin(); burst(60); }
+}
+
+function restartQuiz() { startQuiz(quizMode); }
+
+/* ================= 彩带特效 ================= */
+const cvs = document.getElementById('confetti'), ctx = cvs.getContext('2d');
+let pieces = [], raf = null;
+function resize(){ cvs.width = innerWidth; cvs.height = innerHeight; }
+addEventListener('resize', resize); resize();
+const COLORS = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#c780fa','#ff9f45'];
+function burst(n) {
+  for (let i=0;i<n;i++) pieces.push({
+    x: Math.random()*cvs.width, y: -20 - Math.random()*80,
+    r: 5+Math.random()*7, c: COLORS[Math.floor(Math.random()*COLORS.length)],
+    vy: 2+Math.random()*3, vx: -1.5+Math.random()*3,
+    rot: Math.random()*Math.PI, vr: -.1+Math.random()*.2
+  });
+  if (!raf) tick();
+}
+function tick() {
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  pieces = pieces.filter(p => p.y < cvs.height + 30);
+  pieces.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.fillStyle = p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);
+    ctx.restore();
+  });
+  raf = pieces.length ? requestAnimationFrame(tick) : (ctx.clearRect(0,0,cvs.width,cvs.height), null);
+}
+</script>
+</body>
+</html>
